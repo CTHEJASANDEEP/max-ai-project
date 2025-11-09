@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="form-container">
+        <h2>Register</h2>
+        <form method="POST" action="{% url 'register' %}">
+            {% csrf_token %}
+            
+            {{ form.as_p }}
+
+            <button type="submit" class="btn">Register</button>
+        </form>
+        <p>Already have an account? <a href="{% url 'login' %}">Login here</a>.</p>
+    </div>
+
+    <style>
+        .form-container input[type="text"],
+        .form-container input[type="password"] {
+            width: 100%;
+            padding: 0.75rem;
+            box-sizing: border-box;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        .form-container ul {
+            list-style: none;
+            padding: 0;
+            color: #721c24;
+        }
+    </style>
+{% endblock %}

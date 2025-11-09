@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    
+    <div class="greeting">
+        <h2>Aloha, {{ user.username }}! <img src="{% static 'images/max-avatar.ico' %}" alt="Max" class="avatar-inline"></h2>
+    </div>
+
+    <div class="search-box">
+        <form method="POST" id="search-form">
+            {% csrf_token %}
+            <input type="hidden" name="search_type" value="{{ search_type|default:'web' }}" id="search-type">
+            
+            <input type="text" id="query" name="query" value="{{ query|default:'' }}" placeholder="Type 'hi max', 'play music', or 'open youtube'...">
+            <button type="button" id="voice-search-btn">🎤</button>
+            <button type="submit" class="search-button">Search</button>
+        </form>
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+    </div>
+
+    <div class="action-buttons">
+        <button class="quick-btn" data-query="hi max">Say Hello</button>
+        <button class="quick-btn" data-query="open google">Google</button>
+        <button class="quick-btn" data-query="open youtube">YouTube</button>
+        <button class="quick-btn" data-query="open netflix">Netflix</button>
+        <button class="quick-btn" data-query="open spotify">Spotify</button>
+        <button class="quick-btn" data-query="open maps">Maps</button>
+    </div>
+
+    <div class="search-tabs">
+        <button class="tab-btn {% if not is_image_search %}active{% endif %}" id="web-search-btn">Web Search</button>
+        <button class="tab-btn {% if is_image_search %}active{% endif %}" id="image-search-btn">Image Search</button>
+    </div>
+
+    {% if query %}
+        <div class="results-area">
+
+            {% if is_chat %}
+                <div class="result-header">
+                    <img src="{% static 'images/max-avatar.ico' %}" alt="Max" class="avatar-small">
+                    <h3>Max says:</h3>
+                </div>
+                <p class="ai-response">{{ chat_response }}</p>
+
+            {% elif show_chikaico %}
+                <div class="result-header">
+                    <img src="{% static 'images/max-avatar.ico' %}" alt="Max" class="avatar-small">
+                    <h3>Here's that special image you asked for!</h3>
+                </div>
+                <div style="text-align: center; padding: 2em;">
+                    <img src="{% static 'images/max-avatar.ico' %}" alt="Chika ICO" style="width: 150px; height: 150px; border-radius: 10px;">
+                </div>
+
+            {% elif is_image_search %}
+                <div class="result-header">
+                    <img src="{% static 'images/max-avatar.ico' %}" alt="Max" class="avatar-small">
+                    <h3>Image Results for "{{ query }}"</h3>
+                </div>
+                <div class="image-results-grid">
+                    {% for item in image_results %}
+                        <a href="{{ item.context_link }}" target="_blank" class="image-result-item" title="{{ item.title }}">
+                            <img src="{{ item.thumbnail }}" alt="{{ item.title }}">
+                            <p>{{ item.display_link }}</p>
+                        </a>
+                    {% empty %}
+                        <p>No image results found.</p>
+                    {% endfor %}
+                </div>
+
+            {% elif is_web_search %}
+                <div class="result-header">
+                    <img src="{% static 'images/max-avatar.ico' %}" alt="Max" class="avatar-small">
+                    <h3>AI Summary</h3>
+                </div>
+                <p class="ai-response">{{ chatgpt_solution }}</pre>
+
+                <h3 class="results-title">Google Results</h3>
+                <div class="google-results">
+                    {% for item in google_links %}
+                        <div class="result-item">
+                            {% if item.thumbnail %}
+                                <img src="{{ item.thumbnail }}" alt="" class="thumbnail">
+                            {% else %}
+                                <div class="thumbnail"></div>
+                            {% endif %}
+                            <div class="result-text">
+                                <a href="{{ item.link }}" target="_blank">{{ item.title }}</a>
+                                <p class="link-url">{{ item.link }}</p>
+                                <p class="snippet">{{ item.snippet }}</p>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p>No Google results found.</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchForm = document.getElementById('search-form');
+            const searchTypeInput = document.getElementById('search-type');
+            
+            const webSearchBtn = document.getElementById('web-search-btn');
+            const imageSearchBtn = document.getElementById('image-search-btn');
+
+            if (webSearchBtn) {
+                webSearchBtn.addEventListener('click', () => {
+                    searchTypeInput.value = 'web'; // Set type to web
+                    searchForm.submit(); // Re-submit the form
+                });
+            }
+
+            if (imageSearchBtn) {
+                imageSearchBtn.addEventListener('click', () => {
+                    searchTypeInput.value = 'images'; // Set type to image
+                    searchForm.submit(); // Re-submit the form
+                });
+            }
+        });
+    </script>
+    
+    <script>
+        const voiceBtn = document.getElementById('voice-search-btn');
+        if (voiceBtn) {
+            voiceBtn.addEventListener('click', function() {
+                window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!window.SpeechRecognition) {
+                    alert("Sorry, your browser doesn't support voice search.");
+                    return;
+                }
+                const recognition = new SpeechRecognition();
+                recognition.interimResults = false;
+                recognition.addEventListener('result', e => {
+                    const transcript = Array.from(e.results)
+                        .map(result => result[0])
+                        .map(result => result.transcript)
+                        .join('');
+                    document.getElementById('query').value = transcript;
+                });
+                recognition.start();
+            });
+        }
+    </script>
+{% endblock %}

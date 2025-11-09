@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="admin-container">
+        <h2>Owner Dashboard</h2>
+        
+        <h3>All Users ({{ all_users.count }})</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Username</th>
+                        <th>Role</th>
+                        <th>Searches Made</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in all_users %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.username }}</td>
+                        <td>{% if user.is_superuser %}Owner{% else %}User{% endif %}</td>
+                        <td>{{ user.search_count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <h3>All Search History ({{ all_searches.count }})</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Query</th>
+                        <th>User</th>
+                        <th>Timestamp (UTC)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for search in all_searches %}
+                    <tr>
+                        <td>{{ search.query }}</td>
+                        <td>{{ search.user.username }} (ID: {{ search.user.id }})</td>
+                        <td>{{ search.timestamp|date:"Y-m-d H:i:S" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
